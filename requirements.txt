@@ -1,0 +1,6 @@
+ccxt==4.3.95
+pyTelegramBotAPI==4.18.0
+pandas==2.2.2
+ta
+flask==3.0.3
+requests==2.32.3
