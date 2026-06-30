@@ -33,12 +33,16 @@ TRAIL_ACTIVATE_PCT = 0.03
 TRAIL_PCT          = 0.015
 MAX_DAILY_TRADES   = 5
 SYMBOL             = "BTC/USDT"
-MONITOR_INTERVAL   = 30 * 60
+MONITOR_INTERVAL   = 300
 
 RSI_MIN    = 40
 RSI_MAX    = 65
-ADX_MIN    = 20
+ADX_MIN    = 28
 FNG_MAX_BUY= 80
+
+MIN_VOLUME_MULT      = 1.6
+MAX_DAILY_LOSS       = 20.0
+MAX_CONSECUTIVE_LOSSES = 3
 
 DEMO_START_USDT = 1000.0   # стартовый демо-баланс
 
@@ -51,6 +55,7 @@ trading_mode    = "demo"   # по умолчанию демо (безопасн�
 signals_enabled    = True
 auto_trade_enabled = False
 prev_above_ema     = None
+consecutive_losses = 0
 
 # Реальная позиция
 real_position = None   # {entry_price, amount_btc, usdt_spent, entry_time, highest_price}
@@ -159,11 +164,17 @@ def check_buy_signal(ind15: dict, ind1h: dict, fng: int) -> tuple[bool, str]:
         fails.append(f"EMA50 ≤ EMA200")
     if ind1h["price"] <= ind1h["ema200"]:
         fails.append(f"ниже EMA200(1ч)")
+    ema_diff = abs(e50 - e200) / e200
+    if ema_diff < 0.0015:
+        fails.append("SIDEWAYS MARKET: EMA compression (no trend)")
+    price_range = abs(p - e200) / e200
+    if price_range < 0.002:
+        fails.append("LOW VOLATILITY: price too close to EMA200")
     if not (RSI_MIN <= rsi <= RSI_MAX):
         fails.append(f"RSI {rsi:.1f} вне [{RSI_MIN}–{RSI_MAX}]")
-    if adx < ADX_MIN:
-        fails.append(f"ADX {adx:.1f} < {ADX_MIN}")
-    if vol < vol_ma * 1.2:
+    if adx < ADX_MIN or adx < ind1h["adx"]:
+        fails.append(f"ADX {adx:.1f} < {ADX_MIN} или слабее 1ч ({ind1h['adx']:.1f})")
+    if vol < vol_ma * MIN_VOLUME_MULT:
         fails.append("объём слабый")
     if fng > FNG_MAX_BUY:
         fails.append(f"F&G={fng} экстремальная жадность")
@@ -281,6 +292,7 @@ def monitor_loop() -> None:
     global prev_above_ema, signals_enabled, auto_trade_enabled, trading_mode
     global real_position, real_daily_trades, real_daily_reset
     global demo_position, demo_daily_trades, demo_daily_reset, demo_trades
+    global consecutive_losses
 
     logger.info("Поток мониторинга запущен. Интервал: %d мин.", MONITOR_INTERVAL // 60)
 
@@ -359,6 +371,15 @@ def monitor_loop() -> None:
                 if d_trades >= MAX_DAILY_TRADES:
                     continue
 
+                with state_lock:
+                    consec = consecutive_losses
+                if consec >= MAX_CONSECUTIVE_LOSSES:
+                    logger.info(
+                        "Автопилот [%s]: торговля приостановлена — %d убытков подряд (макс. %d)",
+                        mode, consec, MAX_CONSECUTIVE_LOSSES,
+                    )
+                    continue
+
                 ind1h    = calculate_indicators(SYMBOL, "1h", 220)
                 fng_val, fng_lbl = fetch_fear_greed()
                 ok, reason = check_buy_signal(ind15, ind1h, fng_val)
@@ -425,13 +446,24 @@ def monitor_loop() -> None:
                         held    = int(
                             (datetime.datetime.now() - cur_pos["entry_time"]).total_seconds() / 60
                         )
+                        with state_lock:
+                            if pnl < 0:
+                                consecutive_losses += 1
+                            else:
+                                consecutive_losses = 0
+                            consec_now = consecutive_losses
                         emoji = "✅" if pnl >= 0 else "📉"
+                        loss_warn = (
+                            f"\n⚠️ *Убытков подряд: {consec_now}/{MAX_CONSECUTIVE_LOSSES}*"
+                            if consec_now > 0 else ""
+                        )
                         msg = (
                             f"🤖 *Автопилот {label}: ПРОДАНО*\n\n"
                             f"{reason}\n\n"
                             f"Вход: *{entry:,.2f}* → Выход: *{result['sell_price']:,.2f}*\n"
                             f"{emoji} P&L: *{sign}{pnl:.2f} USDT ({sign}{pnl_pct:.1f}%)*\n"
                             f"Время в позиции: {held} мин."
+                            f"{loss_warn}"
                         )
                         bot.send_message(ADMIN_ID, msg, parse_mode="Markdown")
 
