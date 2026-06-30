@@ -165,15 +165,15 @@ def check_buy_signal(ind15: dict, ind1h: dict, fng: int) -> tuple[bool, str]:
     if ind1h["price"] <= ind1h["ema200"]:
         fails.append(f"ниже EMA200(1ч)")
     ema_diff = abs(e50 - e200) / e200
-    if ema_diff < 0.0015:
+    if ema_diff < 0.0025:
         fails.append("SIDEWAYS MARKET: EMA compression (no trend)")
     price_range = abs(p - e200) / e200
-    if price_range < 0.002:
+    if price_range < 0.003:
         fails.append("LOW VOLATILITY: price too close to EMA200")
     if not (RSI_MIN <= rsi <= RSI_MAX):
         fails.append(f"RSI {rsi:.1f} вне [{RSI_MIN}–{RSI_MAX}]")
-    if adx < ADX_MIN or adx < ind1h["adx"]:
-        fails.append(f"ADX {adx:.1f} < {ADX_MIN} или слабее 1ч ({ind1h['adx']:.1f})")
+    if adx < ADX_MIN:
+        fails.append(f"ADX {adx:.1f} < {ADX_MIN}")
     if vol < vol_ma * MIN_VOLUME_MULT:
         fails.append("объём слабый")
     if fng > FNG_MAX_BUY:
@@ -304,6 +304,7 @@ def monitor_loop() -> None:
             if today != real_daily_reset:
                 real_daily_reset  = today
                 real_daily_trades = 0
+                consecutive_losses = 0
             if today != demo_daily_reset:
                 demo_daily_reset  = today
                 demo_daily_trades = 0
