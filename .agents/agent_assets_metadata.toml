@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "qGzwYKdVNEqUprq_K1OW9"
+uri = "file://bot_main.txt"
+type = "text"
+title = "bot.py (main.py)"
