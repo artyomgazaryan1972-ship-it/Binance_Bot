@@ -6,3 +6,9 @@ id = "qGzwYKdVNEqUprq_K1OW9"
 uri = "file://bot_main.txt"
 type = "text"
 title = "bot.py (main.py)"
+
+[[outputs]]
+id = "pPP51AW67yEJrJuhYoTdB"
+uri = "file://main.txt"
+type = "text"
+title = "main.py"
