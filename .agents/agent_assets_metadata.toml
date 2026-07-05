@@ -12,3 +12,9 @@ id = "pPP51AW67yEJrJuhYoTdB"
 uri = "file://main.txt"
 type = "text"
 title = "main.py"
+
+[[outputs]]
+id = "pnYXhH0V7srbDFB8aZzki"
+uri = "file://binance_bot.zip"
+type = "unspecified"
+title = "binance_bot.zip — все файлы бота"
