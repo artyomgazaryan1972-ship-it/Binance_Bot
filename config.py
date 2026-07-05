@@ -1,0 +1,38 @@
+import os
+
+BINANCE_KEY    = os.getenv("BINANCE_KEY", "")
+BINANCE_SECRET = os.getenv("BINANCE_SECRET", "")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "")
+ADMIN_ID       = int(os.getenv("ADMIN_ID", "0"))
+
+BUY_MIN_USDT       = 5.0
+BUY_MAX_USDT       = 15.0
+AUTO_TRADE_AMOUNT  = 15.0
+RISK_PCT           = 0.02
+BINANCE_FEE        = 0.001
+
+STOP_LOSS_PCT      = 0.03
+TAKE_PROFIT_PCT    = 0.06
+TRAIL_ACTIVATE_PCT = 0.03
+TRAIL_PCT          = 0.015
+
+MAX_DAILY_TRADES       = 5
+MAX_DAILY_LOSS         = 20.0
+MAX_CONSECUTIVE_LOSSES = 3
+MAX_SLIPPAGE_PCT       = 0.003
+
+SYMBOL           = "BTC/USDT"
+MONITOR_INTERVAL = 300
+
+RSI_MIN         = 40
+RSI_MAX         = 65
+ADX_MIN         = 28
+FNG_MAX_BUY     = 80
+MIN_VOLUME_MULT = 1.6
+
+DEMO_START_USDT = 1000.0
+
+STATE_FILE       = "state.json"
+LOG_FILE         = "bot.log"
+LOG_MAX_BYTES    = 5 * 1024 * 1024
+LOG_BACKUP_COUNT = 3

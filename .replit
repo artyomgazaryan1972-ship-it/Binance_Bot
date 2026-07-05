@@ -24,13 +24,13 @@ args = "Binance Telegram Bot"
 name = "Binance Telegram Bot"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pip install -r requirements.txt -q && python bot.py"
-waitForPort = 6000
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install -r requirements.txt -q && python main.py"
+waitForPort = 6000
 
 [agent]
 stack = "PNPM_WORKSPACE"
